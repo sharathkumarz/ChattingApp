@@ -35,7 +35,7 @@ import com.sharathkumar.chattingapp.LightColors
 @Composable
 fun ContactsScreen(onClick: (Contact) -> Unit) {
     val context = LocalContext.current
-    val homeViewModel:HomeViewModel = viewModel()
+    val chatViewModel: ChatViewModel = viewModel()
     var hasPermission by remember { mutableStateOf(false) }
     var contactsMap by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     val darkMode = isSystemInDarkTheme()
@@ -77,7 +77,7 @@ fun ContactsScreen(onClick: (Contact) -> Unit) {
                         phoneNumber = entry.key,
                         onClick = {
                             onClick(Contact(username = entry.value, phone = entry.key))
-                            homeViewModel.addUserContact(Contact(username = entry.value, phone = entry.key))
+                            chatViewModel.addUserContact(Contact(username = entry.value, phone = entry.key))
 
                         },
                         textColor = textColor.primary

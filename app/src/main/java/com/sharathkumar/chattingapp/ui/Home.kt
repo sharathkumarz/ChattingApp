@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -73,14 +74,17 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(application))
+    val chatViewModel: ChatViewModel = viewModel()
     val userdata by homeViewModel.userProfile.collectAsState()
-    val chatContacts by homeViewModel.chatContacts.collectAsState()
+    val chatContacts by chatViewModel.chatContacts.collectAsState()
     val addUserPhoto by remember { mutableIntStateOf(R.drawable.img_1) }
     val darkMode = isSystemInDarkTheme()
     val backgroundColor = if (darkMode) DarkColors else LightColors
     val textColor = if (darkMode) LightColors else DarkColors
     var showDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf(Contact(username = "", phone = "")) }
+     
+
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -100,7 +104,7 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Welcome,\n ${userdata.username}",
+                text = "Welcome,\n${userdata.username}",
                 fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.weight(1f) // Take available space
@@ -172,7 +176,17 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
                                 .size(60.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = user.username, fontSize = 20.sp, color = textColor.primary)
+                        Column {
+                            Text(text = user.username, fontSize = 20.sp, color = textColor.primary)
+                            Row {
+                                Text(
+                                    user.lastMessage, fontSize = 15.sp, color = textColor.primary,
+                                    maxLines = 1, modifier = Modifier.weight(1f))
+                                Text(
+                                    user.lastseen,fontSize = 15.sp, color = textColor.primary,
+                                    maxLines = 1,)
+                            }
+                        }
 
 
                     }
@@ -191,7 +205,7 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
             selectedUser = selectedUser,
             onDismiss = { showDialog = false },
             onConfirm = {
-                homeViewModel.deleteUserContact(selectedUser.phone,userdata.number)
+                chatViewModel.deleteUserContact(selectedUser.phone,userdata.number)
             }
         )
     }
@@ -212,60 +226,74 @@ class HomeViewModel(application: Application) :  AndroidViewModel(application) {
     private val userDao = db.userDao()
 
     init {
-        loadUserContacts()
+      //  loadUserContacts()
         loadUserProfile()
-        observeNewMessages()
+       // observeNewMessages()
     }
 
     // Observe incoming messages and update contacts list
-    private fun observeNewMessages() {
-        viewModelScope.launch {
-            chatViewModel.receivedMessages.collect { messages ->
-                messages.forEach { message ->
-                    val sender = message.sender
-                    val contactName = contacts[sender] ?: sender
-
-                    if (_chatContacts.value.none { it.phone == sender }) {
-                        val newUser = Contact(username = contactName, phone = sender)
-                        _chatContacts.value += newUser
-                        contactDao.insertContact(newUser)
-                    }
-                }
-            }
-        }
-    }
+//    private fun observeNewMessages() {
+//        viewModelScope.launch {
+//            chatViewModel.receivedMessages.collect { messages ->
+//                messages.forEach { message ->
+//                    Log.i("home","$message")
+//                    val sender = message.sender
+//                    val contactName = contacts[sender] ?: sender
+//                    val existingContact = _chatContacts.value.find { it.phone == sender }
+//
+//                    if (existingContact != null) {
+//                        // Update last message and timestamp for existing contact
+//                        val updatedContact = existingContact.copy(
+//                            lastMessage = message.message,
+//                            lastseen = message.timestamp
+//                        )
+//                        _chatContacts.value = _chatContacts.value.map {
+//                            if (it.phone == sender) updatedContact else it
+//                        }
+//                        contactDao.updateContact(existingContact) // Assuming an update method exists
+//                    } else {
+//                        // Create a new contact with the latest message
+//                        val newUser = Contact(username = contactName, phone = sender,
+//                            lastMessage = message.message, lastseen = message.timestamp)
+//                        _chatContacts.value += newUser
+//                        contactDao.insertContact(newUser)
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     // Load user contacts from the database
-    private fun loadUserContacts() {
-        viewModelScope.launch {
-            _chatContacts.value = contactDao.getAllContacts()
-        }
-    }
+//    private fun loadUserContacts() {
+//        viewModelScope.launch {
+//            _chatContacts.value = contactDao.getAllContacts()
+//        }
+//    }
 
     // Add a new contact to the database
-    fun addUserContact(contact: Contact) {
-        viewModelScope.launch {
-            if (!_chatContacts.value.contains(contact)) {
-                _chatContacts.value += contact
-                contactDao.insertContact(contact)
-            }
-        }
-    }
+//    fun addUserContact(contact: Contact) {
+//        viewModelScope.launch {
+//            if (!_chatContacts.value.contains(contact)) {
+//                _chatContacts.value += contact
+//                contactDao.insertContact(contact)
+//            }
+//        }
+//    }
 
     // Delete a contact and associated chat
-    @Transaction
-    suspend fun deleteUserAndChat(senderId: String, receiverId: String) {
-        contactDao.deleteContact(senderId)
-        chatViewModel.deleteChat(senderId, receiverId)
-    }
-
-    // Public method to delete a contact and refresh the contacts list
-    fun deleteUserContact(senderId: String, receiverId: String) {
-        viewModelScope.launch {
-            deleteUserAndChat(senderId, receiverId)
-            loadUserContacts()
-        }
-    }
+//    @Transaction
+//    suspend fun deleteUserAndChat(senderId: String, receiverId: String) {
+//        contactDao.deleteContact(senderId)
+//        chatViewModel.deleteChat(senderId, receiverId)
+//    }
+//
+//    // Public method to delete a contact and refresh the contacts list
+//    fun deleteUserContact(senderId: String, receiverId: String) {
+//        viewModelScope.launch {
+//            deleteUserAndChat(senderId, receiverId)
+//            loadUserContacts()
+//        }
+//    }
 
     // Load the current user's profile data
     private fun loadUserProfile() {

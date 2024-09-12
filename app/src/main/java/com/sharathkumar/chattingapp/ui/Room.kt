@@ -8,6 +8,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Update
+import androidx.room.Upsert
 import java.sql.Timestamp
 
 @Dao
@@ -41,6 +43,10 @@ interface ContactDao{
 
     @Insert
     suspend fun insertContact(vararg contact: Contact)
+
+    @Update
+    suspend fun updateContact(vararg contact: Contact)
+
 }
 
 @Dao

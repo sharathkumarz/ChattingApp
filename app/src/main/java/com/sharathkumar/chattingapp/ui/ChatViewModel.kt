@@ -2,8 +2,10 @@ package com.sharathkumar.chattingapp.ui
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Transaction
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.WebSockets
@@ -25,8 +27,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var _receivedMessages = MutableStateFlow<List<Message1>>(emptyList())
     val receivedMessages: StateFlow<List<Message1>> = _receivedMessages
 
+    private val contacts: Map<String, String> = getContacts(application.contentResolver)
+
+    private val _chatContacts = MutableStateFlow<List<Contact>>(emptyList())
+    val chatContacts: StateFlow<List<Contact>> = _chatContacts
+
+
     private val db = AppDatabase.getDatabase(application)
     private val messageDao = db.messageDao()
+    private val contactDao = db.contactDao()
     private val userDao = db.userDao()
 
     private val client = HttpClient {
@@ -40,9 +49,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private var webSocketSession: WebSocketSession? = null
+    private var userId = mutableStateOf("")
 
     init {
         initializeWebSocketConnection()
+        observeNewMessages()
+        loadUserContacts()
     }
 
     /**
@@ -165,6 +177,78 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
         closeWebSocketConnection()
         client.close()
+    }
+    /**
+     * assign contacts
+     */
+    private fun observeNewMessages() {
+        viewModelScope.launch {
+
+            val userId = userDao.getUserProfile()?.number
+
+            receivedMessages.collect { messages ->
+                messages.forEach { message ->
+                    //Log.i("home","$message")
+
+                    var sender = message.sender
+                    if(sender == userId){
+                        sender = message.receiver
+                    }
+
+                    val contactName = contacts[sender] ?: sender
+                    val existingContact = _chatContacts.value.find { it.phone == sender }
+
+                    if (existingContact != null) {
+                        // Update last message and timestamp for existing contact
+                        val updatedContact = existingContact.copy(
+                            lastMessage = message.message,
+                            lastseen = message.timestamp
+                        )
+                        _chatContacts.value = _chatContacts.value.map {
+                            if (it.phone == sender) updatedContact else it
+                        }
+                        contactDao.updateContact(existingContact) // Assuming an update method exists
+                    } else {
+                        // Create a new contact with the latest message
+                        val newUser = Contact(username = contactName, phone = sender,
+                            lastMessage = message.message, lastseen = message.timestamp)
+                        _chatContacts.value += newUser
+                        contactDao.insertContact(newUser)
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun loadUserContacts() {
+        viewModelScope.launch {
+            _chatContacts.value = contactDao.getAllContacts()
+        }
+    }
+
+    fun deleteUserContact(senderId: String, receiverId: String) {
+        viewModelScope.launch {
+            deleteUserAndChat(senderId, receiverId)
+            loadUserContacts()
+        }
+    }
+
+    fun addUserContact(contact: Contact) {
+        viewModelScope.launch {
+            if (!_chatContacts.value.contains(contact)) {
+                _chatContacts.value += contact
+                contactDao.insertContact(contact)
+            }
+        }
+    }
+
+
+
+    @Transaction
+    suspend fun deleteUserAndChat(senderId: String, receiverId: String) {
+        contactDao.deleteContact(senderId)
+        deleteChat(senderId, receiverId)
     }
 
     /**

@@ -39,7 +39,9 @@ data class Contact(
     @PrimaryKey(autoGenerate = true)
     val messageId: Int = 0,
     var username: String,
-    var phone: String
+    var phone: String,
+    var lastMessage:String="",
+    var lastseen:String =""
 )
 
 
