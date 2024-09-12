@@ -1,5 +1,6 @@
 package com.sharathkumar.chattingapp.ui
 
+import android.app.Application
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,7 +59,8 @@ import io.ktor.http.ContentType
 @Composable
 fun UpdateProfile() {
     val context = LocalContext.current
-    val homeViewModel : HomeViewModel= viewModel()
+    val application = context.applicationContext as Application
+    val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(application))
     val userdata by homeViewModel.userProfile.collectAsState()
     var newUser by remember { mutableStateOf(userdata) }
     val darkMode = isSystemInDarkTheme()

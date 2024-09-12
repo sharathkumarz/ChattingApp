@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -80,27 +81,6 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
     val textColor = if (darkMode) LightColors else DarkColors
     var showDialog by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf(Contact(username = "", phone = "")) }
-    var hasPermission by remember { mutableStateOf(false) }
-
-//    val permissionLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.RequestPermission()
-//    ) { isGranted ->
-//        hasPermission = isGranted
-//    }
-//
-//    // Check and request permission only on the first launch or if permission is denied
-//    LaunchedEffect(Unit) {
-//        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
-//            == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            hasPermission = true
-//
-//        } else {
-//            permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-//        }
-//    }
-
-
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -217,7 +197,7 @@ fun HomeScreen(onClick: (Contact) -> Unit,onNewUser:() -> Unit,onUpdateProfile: 
     }
 }
 
-class HomeViewModel(application: Application) : ViewModel() {
+class HomeViewModel(application: Application) :  AndroidViewModel(application) {
 
     private val chatViewModel = ChatViewModel(application)
     private val _chatContacts = MutableStateFlow<List<Contact>>(emptyList())

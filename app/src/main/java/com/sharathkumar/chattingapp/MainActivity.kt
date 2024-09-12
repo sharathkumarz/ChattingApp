@@ -1,5 +1,6 @@
 package com.sharathkumar.chattingapp
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +12,11 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -46,13 +51,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ChattingAppTheme {
-                Nav()
+                Nav(context = this)
                 //ContactsScreen()
             }
         }
     }
 }
-
 
 
 enum class Screen {
@@ -65,8 +69,15 @@ enum class Screen {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Nav() {
+fun Nav(context:Context) {
+    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    var hasBeenShown by remember { mutableStateOf(prefs.getBoolean("NewUser", false)) }
     val navViewModel: NavViewModel = viewModel()
+
+    if(!hasBeenShown){
+        navViewModel.currentScreen.value = Screen.NewUser
+    }
+
     // Handle back navigation when on ChatScreen or NewUser
     BackHandler(enabled = navViewModel.currentScreen.value == Screen.ChatScreen ||
             navViewModel.currentScreen.value == Screen.NewUser ||
@@ -91,11 +102,16 @@ fun Nav() {
                     }
                 )
             }
+
             Screen.ChatScreen -> {
                 ChattingScreen(navViewModel.selectedUser.value)
             }
             Screen.NewUser -> {
-                NewUser()
+                NewUser(onClick = {
+                    prefs.edit().putBoolean("NewUser",true).apply()
+                      hasBeenShown = true
+                    navViewModel.navigateToHome()
+                })
             }
             Screen.UpdateProfile ->{
                 UpdateProfile()
@@ -111,7 +127,7 @@ fun Nav() {
 
 
 class NavViewModel : ViewModel() {
-    val currentScreen = mutableStateOf(Screen.Home)
+    var currentScreen = mutableStateOf(Screen.Home)
     val selectedUser = mutableStateOf(Contact(username = "", phone = ""))
 
     fun navigateToHome() {
