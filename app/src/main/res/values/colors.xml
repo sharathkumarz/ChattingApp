@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- WhatsApp-like Colors -->
+    <color name="whatsapp_green">#25D366</color> <!-- WhatsApp primary green color -->
+    <color name="whatsapp_dark_green">#075E54</color> <!-- WhatsApp dark green (App bar and header) -->
+    <color name="whatsapp_light_green">#DCF8C6</color> <!-- Light green (Sent message bubble) -->
+    <color name="whatsapp_light_gray">#ECE5DD</color> <!-- Light gray (Chat background) -->
+    <color name="whatsapp_blue">#34B7F1</color> <!-- Blue (Tick and icons color) -->
+    <color name="whatsapp_received_bubble">#FFFFFF</color> <!-- White (Received message bubble) -->
+    <color name="whatsapp_sent_bubble">#DCF8C6</color> <!-- Light green (Sent message bubble) -->
+    <color name="whatsapp_actionbar_bg">#075E54</color> <!-- WhatsApp Action bar background color -->
+    <color name="whatsapp_input_field">#F0F0F0</color> <!-- Input field background -->
+    <color name="whatsapp_chat_date">#999999</color> <!-- Date separator in chat -->
+    <color name="whatsapp_dark_gray">#707070</color> <!-- Dark gray for status text -->
+
+    <!-- Predefined Colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="Bblue">#FF2196F3</color>
+    <color name="BGreen">#FF4CAF50</color>
+
+</resources>
